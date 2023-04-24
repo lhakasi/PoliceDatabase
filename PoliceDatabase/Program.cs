@@ -29,9 +29,9 @@ namespace PoliceDatabase
             while (isWorking)
             {
                 Console.Clear();
-                Console.WriteLine("================================");
-                Console.WriteLine("   *** База данных полиции ***  ");
-                Console.WriteLine("================================");
+
+                ShowHeader();
+
                 Console.WriteLine($"{CommandAddNewCriminal} - добавить преступника в базу");
                 Console.WriteLine($"{CommandFindCriminal} - найти преступника");
                 Console.WriteLine($"{CommandExit} - закрыть терминал");
@@ -53,10 +53,19 @@ namespace PoliceDatabase
                         break;
 
                     default:
-                        Console.WriteLine("Недопустимая команда");
+                        StorageOfErrors.ShowError(Errors.InvalidCommand);
                         break;
                 }
             }
+        }
+
+        private void ShowHeader()
+        {
+            string header = "   *** База данных полиции ***  ";
+
+            Console.WriteLine(new string('=', header.Length));
+            Console.WriteLine(header);
+            Console.WriteLine(new string('=', header.Length));
         }
     }
 
@@ -77,10 +86,10 @@ namespace PoliceDatabase
             Weight = weight;
             IsArrested = isArrested;
 
-            if(IsArrested)            
+            if (IsArrested)
                 _status = "Арестован";
             else
-                _status = "В розыске";            
+                _status = "В розыске";
         }
 
         public string Nationality { get; private set; }
@@ -112,9 +121,7 @@ namespace PoliceDatabase
         }
 
         public void AddNewCriminal()
-        {
-            bool isIncorrect = true;
-
+        { 
             Console.Clear();
             Console.Write("Введите фамилию: ");
             string surname = Console.ReadLine();
@@ -129,45 +136,18 @@ namespace PoliceDatabase
             string nationality = Console.ReadLine().ToLower();
 
             int height = 0;
+            FillData(ref height, "рост");
 
-            while (isIncorrect)
-            {
-                Console.Write("Введите рост: ");
-                if (int.TryParse(Console.ReadLine(), out int inputHeight) == false || inputHeight < 0)
-                {
-                    Console.WriteLine("Некорректный ввод");                    
-                }
-                else
-                {
-                    height = inputHeight;
-                    isIncorrect = false;
-                }
-            }
-
-            int weight = 0;
-            isIncorrect = true;
-
-            while (isIncorrect)
-            {
-                Console.Write("Введите вес: ");
-                if (int.TryParse(Console.ReadLine(), out int inputWeight) == false || inputWeight < 0)
-                {
-                    Console.WriteLine("Некорректный ввод");                    
-                }
-                else
-                {
-                    weight = inputWeight;
-                    isIncorrect = false;
-                }
-            }
+            int weight = 0; 
+            FillData(ref weight, "вес");
 
             bool isArrested = false;
-            isIncorrect = true;
+            bool isIncorrect = true;
 
             while (isIncorrect)
             {
                 Console.Write("Заключен под стражу в настоящее время? (да/нет): ");
-                
+
                 string status = Console.ReadLine();
 
                 if (status.ToLower() == "да")
@@ -182,7 +162,7 @@ namespace PoliceDatabase
                 }
                 else
                 {
-                    Console.WriteLine("Некорректный ввод");
+                    StorageOfErrors.ShowError(Errors.IncorrectInput);
                     isIncorrect = true;
                 }
             }
@@ -192,54 +172,75 @@ namespace PoliceDatabase
 
         public void FindCriminal()
         {
-            bool isIncorrect = true;
-
-            int height = 0;
-
             Console.Clear();
 
-            while (isIncorrect)
-            {
-                Console.Write("Введите рост: ");
-                if (int.TryParse(Console.ReadLine(), out int inputHeight) == false || inputHeight < 0)
-                {
-                    Console.WriteLine("Некорректный ввод");                    
-                }
-                else
-                {
-                    height = inputHeight;
-                    isIncorrect = false;
-                }
-            }
+            int height = 0;
+            FillData(ref height, "рост");
 
             int weight = 0;
-            isIncorrect = true;
-
-            while (isIncorrect)
-            {
-                Console.Write("Введите вес: ");
-                if (int.TryParse(Console.ReadLine(), out int inputWeight) == false || inputWeight < 0)
-                {
-                    Console.WriteLine("Некорректный ввод");                    
-                }
-                else
-                {
-                    weight = inputWeight;
-                    isIncorrect = false;
-                }
-            }
+            FillData(ref weight, "вес");
 
             Console.Write("Введите национальность: ");
             string nationality = Console.ReadLine().ToLower();
 
-            var filteredCriminals = _criminals.Where(criminal => criminal.Height == height && criminal.IsArrested == false);
-            filteredCriminals = filteredCriminals.Where(criminal => criminal.Weight == weight);
-            filteredCriminals = filteredCriminals.Where(criminal => criminal.Nationality == nationality);
+            var filteredCriminals = _criminals.Where(criminal =>
+            criminal.Height == height
+            && criminal.Weight == weight
+            && criminal.Nationality == nationality
+            && criminal.IsArrested == false);
 
-            foreach (Criminal criminal in filteredCriminals)            
+            foreach (Criminal criminal in filteredCriminals)
                 criminal.ShowInfo();
-            
+
             Console.ReadKey();
         }
+
+        private void FillData(ref int number, string data)
+        { 
+            bool isIncorrect = true;
+
+            while (isIncorrect)
+            {
+                Console.Write($"Введите {data}:");
+                
+                number = GetNumber();
+                
+                if (number == 0)
+                    StorageOfErrors.ShowError(Errors.IncorrectInput);
+                else                                    
+                    isIncorrect = false;                
+            }
+        }
+
+        private int GetNumber()
+        {
+            if (int.TryParse(Console.ReadLine(), out int number) == false || number < 0)            
+                return 0;            
+            else            
+                return number;
+        }
+    }
+
+    class StorageOfErrors
+    {
+        public static void ShowError(Errors error)
+        {
+            Dictionary<Errors, string> errors = new Dictionary<Errors, string>
+            {
+                { Errors.InvalidCommand, "Недопустимая команда" },
+                { Errors.IncorrectInput, "Некорректный ввод" }
+            };
+
+            if (errors.ContainsKey(error))
+                Console.WriteLine(errors[error]);
+
+            Console.ReadKey();
+        }
+    }
+
+    enum Errors
+    {
+        InvalidCommand,
+        IncorrectInput        
     }
 }
