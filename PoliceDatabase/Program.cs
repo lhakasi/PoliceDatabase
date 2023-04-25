@@ -121,7 +121,7 @@ namespace PoliceDatabase
         }
 
         public void AddNewCriminal()
-        { 
+        {
             Console.Clear();
             Console.Write("Введите фамилию: ");
             string surname = Console.ReadLine();
@@ -135,11 +135,9 @@ namespace PoliceDatabase
             Console.Write("Введите национальность: ");
             string nationality = Console.ReadLine().ToLower();
 
-            int height = 0;
-            FillData(ref height, "рост");
+            int height = FillData("рост");
 
-            int weight = 0; 
-            FillData(ref weight, "вес");
+            int weight = FillData("вес");
 
             bool isArrested = false;
             bool isIncorrect = true;
@@ -174,11 +172,9 @@ namespace PoliceDatabase
         {
             Console.Clear();
 
-            int height = 0;
-            FillData(ref height, "рост");
+            int height = FillData("рост");
 
-            int weight = 0;
-            FillData(ref weight, "вес");
+            int weight = FillData("вес");
 
             Console.Write("Введите национальность: ");
             string nationality = Console.ReadLine().ToLower();
@@ -195,28 +191,30 @@ namespace PoliceDatabase
             Console.ReadKey();
         }
 
-        private void FillData(ref int number, string data)
-        { 
+        private int FillData(string data)
+        {
+            int number = 0;
+
             bool isIncorrect = true;
 
             while (isIncorrect)
             {
                 Console.Write($"Введите {data}:");
-                
+
                 number = GetNumber();
-                
-                if (number == 0)
+
+                if (number <= 0)
                     StorageOfErrors.ShowError(Errors.IncorrectInput);
-                else                                    
-                    isIncorrect = false;                
+                else
+                    isIncorrect = false;
             }
+
+            return number;
         }
 
         private int GetNumber()
         {
-            if (int.TryParse(Console.ReadLine(), out int number) == false || number < 0)            
-                return 0;            
-            else            
+            int.TryParse(Console.ReadLine(), out int number);
                 return number;
         }
     }
@@ -241,6 +239,6 @@ namespace PoliceDatabase
     enum Errors
     {
         InvalidCommand,
-        IncorrectInput        
+        IncorrectInput
     }
 }
